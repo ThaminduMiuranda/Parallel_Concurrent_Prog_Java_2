@@ -3,11 +3,13 @@
  */
 
 import java.util.concurrent.locks.*;
+import java.util.concurrent.*;
 
 class Shopper extends Thread {
 
     public static int bagsOfChips = 1; // start with one on the list
     private static Lock pencil = new ReentrantLock();
+    private static CyclicBarrier firstBump = new CyclicBarrier(10);
 
     public Shopper(String name) {
         this.setName(name);
@@ -22,7 +24,17 @@ class Shopper extends Thread {
             } finally {
                 pencil.unlock();
             }
+            try{
+                firstBump.await();
+            }catch (InterruptedException | BrokenBarrierException e){
+                e.printStackTrace();
+            }
         } else { // "Barron"
+            try{
+                firstBump.await();
+            }catch (InterruptedException | BrokenBarrierException e){
+                e.printStackTrace();
+            }
             pencil.lock();
             try {
                 bagsOfChips *= 2;

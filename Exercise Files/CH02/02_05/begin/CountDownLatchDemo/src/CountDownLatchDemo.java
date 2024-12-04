@@ -9,7 +9,7 @@ class Shopper extends Thread {
 
     public static int bagsOfChips = 1; // start with one on the list
     private static Lock pencil = new ReentrantLock();
-    private static CyclicBarrier fistBump = new CyclicBarrier(10);
+    private static CountDownLatch fistBump = new CountDownLatch(5);
 
     public Shopper(String name) {
         this.setName(name);
@@ -24,15 +24,11 @@ class Shopper extends Thread {
             } finally {
                 pencil.unlock();
             }
-            try {
-                fistBump.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
-                e.printStackTrace();
-            }
+            fistBump.countDown();
         } else { // "Barron"
             try {
                 fistBump.await();
-            } catch (InterruptedException | BrokenBarrierException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             pencil.lock();
