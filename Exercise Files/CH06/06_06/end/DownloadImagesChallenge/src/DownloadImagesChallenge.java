@@ -4,6 +4,9 @@
 
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
 /* sequential implementation of multiple image downloader */
@@ -52,7 +55,42 @@ class ParallelImageDownloader {
 
     /* returns total bytes from downloading all images in imageNumbers array */
     public int downloadAll() {
-        // YOUR CODE GOES HERE //
+        int numWorkers = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(numWorkers);
+
+        List<Future> futures = new ArrayList<>();
+        for (int num : imageNumbers){
+            Callable<Integer> imageRequest = () -> { return downloadImage(num);};
+            futures.add(pool.submit(imageRequest));
+        }
+
+        int totalBytes = 0;
+        try{
+            for (Future<Integer> f : futures){
+                totalBytes += f.get();
+            }
+        }catch (InterruptedException | ExecutionException e){
+            e.printStackTrace();
+        }
+
+        pool.shutdown();
+        return totalBytes;
+    }
+
+    private int downloadImage(int imageNumber) {
+        try {
+            imageNumber = (Math.abs(imageNumber) % 50) + 1; // force number between 1 and 50
+            URL photoURL = new URL(String.format("http://699340.youcanlearnit.net/image%03d.jpg", imageNumber));
+            BufferedInputStream in = new BufferedInputStream(photoURL.openStream());
+            int bytesRead, totalBytes = 0;
+            byte buffer[] = new byte[1024];
+            while((bytesRead = in.read(buffer, 0, 1024)) != -1)
+                totalBytes += bytesRead;
+            return totalBytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }
 
